@@ -1,0 +1,63 @@
+
+services:
+  mongo1:
+    container_name: mongo1
+    image: mongo:4.4   
+    volumes:
+      - ~/volumes/mongobank/data_replica1:/data/db
+      - ./scripts/rs-init.sh:/scripts/rs-init.sh
+      - ./scripts/init.js:/scripts/init.js
+    networks:
+      - banknet
+    ports:
+      - 127.0.0.1:27017:27017
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 5G
+    depends_on:
+      - mongo2     
+    links:
+      - mongo2   
+    restart: always
+    command: --setParameter internalQueryMaxBlockingSortMemoryUsageBytes=601514320
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs", "-wiredTigerCacheSizeGB=16" ]
+
+  mongo2:
+    container_name: mongo2
+    image: mongo:4.4   
+    volumes:
+      - ~/volumes/mongobank/data_replica2:/data/db  
+    networks:
+      - banknet
+    ports:
+      - 127.0.0.1:27018:27017
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4G
+    restart: always
+    command: --setParameter internalQueryMaxBlockingSortMemoryUsageBytes=601514320
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs", "-wiredTigerCacheSizeGB=16" ]
+    
+
+    
+      
+  admin-mongo:    
+    image: registry.gitlab.com/armdev/dockers/mongoadmin
+    container_name: admin-mongo
+    ports:
+      - "2222:1234"
+    environment:
+      - HOST=0.0.0.0
+    depends_on:
+      - mongo1
+    networks:
+      - banknet
+  
+
+networks:
+  banknet:
+    driver: bridge

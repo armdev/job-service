@@ -1,0 +1,327 @@
+trigger:
+- main
+
+resources:
+- repo: self
+
+
+variables:
+  dockerRegistryServiceConnection: '8b1772a2-7016-4f60-a084-ed63c151ac8c'
+  containerRegistry: 'ameriabankazurecr.azurecr.io' 
+  
+  imageRepositoryChaos: 'chaos'
+  dockerfilePathChaos: '$(Build.SourcesDirectory)/chaos/Dockerfile'
+  mavenPathChaos: '$(Build.SourcesDirectory)/pom.xml'
+  
+  imageRepositoryDocument: 'document'
+  dockerfilePathDocument: '$(Build.SourcesDirectory)/document/Dockerfile'
+  mavenPathDocument: '$(Build.SourcesDirectory)/pom.xml'
+  
+  imageRepositoryWebhook: 'webhook'
+  dockerfilePathWebhook: '$(Build.SourcesDirectory)/webhook/Dockerfile'
+  mavenPathWebhook: '$(Build.SourcesDirectory)/pom.xml'
+  
+  imageRepositoryWicket: 'wicket'
+  dockerfilePathWicket: '$(Build.SourcesDirectory)/wicket/Dockerfile'
+  mavenPathWicket: '$(Build.SourcesDirectory)/pom.xml'
+  
+  imageRepositoryClientSync: 'client-sync'
+  dockerfilePathClientSync: '$(Build.SourcesDirectory)/client-sync/Dockerfile'
+  mavenPathClientSync: '$(Build.SourcesDirectory)/pom.xml'  
+  
+  imageRepositoryDiamond: 'diamond'
+  dockerfilePathDiamond: '$(Build.SourcesDirectory)/diamond/Dockerfile'
+  mavenPathDiamond: '$(Build.SourcesDirectory)/pom.xml'
+  
+  imageRepositoryInternalGate: 'internal-gate'
+  dockerfilePathInternalGate: '$(Build.SourcesDirectory)/internal-gate/Dockerfile'
+  mavenPathInternalGate: '$(Build.SourcesDirectory)/internal-gate/pom.xml'
+  
+    
+  tag: 'be.RL'
+  vmImageName: 'ubuntu-latest'
+
+stages:       
+- stage: BuildsClientSync
+  displayName: 'ClientSync - Build and push'
+  jobs:
+  - job: Build
+    displayName: 'Build ClientSync'
+    pool:
+     vmImage: $(vmImageName)
+    container: maven:3.9.5-eclipse-temurin-21
+    variables:
+      - name: JAVA_HOME
+        value: /opt/java/openjdk
+      - name: JAVA_VERSION
+        value: jdk-21.0.1+12
+    steps:
+    - task: DockerInstaller@0
+      displayName: Docker Installer
+      inputs:
+       dockerVersion: 24.0.2
+       releaseType: stable
+
+    - task: Maven@3
+      displayName: 'maven run client-sync'
+      inputs:
+        mavenPomFile: $(mavenPathClientSync)        
+        goals: 'clean package -Pprod'
+    - task: Docker@2
+      displayName: Login to Container Registry
+      inputs:
+         command: login
+         containerRegistry: $(dockerRegistryServiceConnection)
+    - task: Docker@2
+      displayName: 'ClientSync - Build and push an image'
+      inputs:       
+        containerRegistry: $(dockerRegistryServiceConnection)
+        Dockerfile: $(dockerfilePathClientSync)
+        repository: $(imageRepositoryClientSync)
+        command: buildAndPush
+        tags: $(tag)       
+        arguments: '--build-arg JAR_FILE=$(Build.SourcesDirectory)/client-sync/target/client-sync.jar .'        
+
+        
+- stage: BuildsWebhook
+  displayName: 'Webhook - Build and push'
+  jobs:
+  - job: Build
+    displayName: 'Build Webhook'
+    pool:
+     vmImage: $(vmImageName)
+    container: maven:3.9-eclipse-temurin-21
+    variables:
+      - name: JAVA_HOME
+        value: /opt/java/openjdk     
+      - name: JAVA_VERSION
+        value: jdk-21.0.1+12     
+    steps:
+    - task: DockerInstaller@0
+      displayName: Docker Installer
+      inputs:
+       dockerVersion: 24.0.2
+       releaseType: stable
+    - task: Maven@3
+      displayName: 'maven run Webhook'
+      inputs:
+        mavenPomFile: $(mavenPathWebhook)        
+        goals: 'clean package -Pprod'
+    - task: Docker@2
+      displayName: Login to Container Registry
+      inputs:
+         command: login
+         containerRegistry: $(dockerRegistryServiceConnection)
+    - task: Docker@2
+      displayName: 'Webhook - Build and push an image'
+      inputs:       
+        containerRegistry: $(dockerRegistryServiceConnection)
+        Dockerfile: $(dockerfilePathWebhook)
+        repository: $(imageRepositoryWebhook)
+        command: buildAndPush
+        tags: $(tag)       
+        arguments: '--build-arg JAR_FILE=$(Build.SourcesDirectory)/webhook/target/webhook.jar .'
+        
+        
+- stage: BuildsInternalGate
+  displayName: 'InternalGate - Build and push'
+  jobs:
+  - job: Build
+    displayName: 'Build InternalGate'
+    pool:
+     vmImage: $(vmImageName)
+    container: maven:3.9-eclipse-temurin-21
+    variables:
+      - name: JAVA_HOME
+        value: /opt/java/openjdk
+      - name: JAVA_VERSION
+        value: jdk-20.0.1+9   
+    steps:
+    - task: DockerInstaller@0
+      displayName: Docker Installer
+      inputs:
+       dockerVersion: 24.0.2
+       releaseType: stable
+    - task: Maven@3
+      displayName: 'maven run internal-gate'
+      inputs:
+        mavenPomFile: $(mavenPathInternalGate)        
+        goals: 'clean package -Pprod'
+    - task: Docker@2
+      displayName: Login to Container Registry
+      inputs:
+         command: login
+         containerRegistry: $(dockerRegistryServiceConnection)
+    - task: Docker@2
+      displayName: 'Gate - Build and push an image'
+      inputs:       
+        containerRegistry: $(dockerRegistryServiceConnection)
+        Dockerfile: $(dockerfilePathInternalGate)
+        repository: $(imageRepositoryInternalGate)
+        command: buildAndPush
+        tags: $(tag)       
+        arguments: '--build-arg JAR_FILE=$(Build.SourcesDirectory)/internal-gate/target/internal-gate.jar .'
+
+        
+- stage: Buildswicket
+  displayName: 'Wicket - Build and push'
+  jobs:
+  - job: Build
+    displayName: 'Build Wicket'
+    pool:
+     vmImage: $(vmImageName)
+    container: maven:3.9.5-eclipse-temurin-21
+    variables:
+      - name: JAVA_HOME
+        value: /opt/java/openjdk
+      - name: JAVA_VERSION
+        value: jdk-21.0.1+12
+    steps:
+    - task: DockerInstaller@0
+      displayName: Docker Installer
+      inputs:
+       dockerVersion: 24.0.2
+       releaseType: stable
+
+    - task: Maven@3
+      displayName: 'maven run wicket'
+      inputs:
+        mavenPomFile: $(mavenPathWicket)        
+        goals: 'clean package -Pprod'
+    - task: Docker@2
+      displayName: Login to Container Registry
+      inputs:
+         command: login
+         containerRegistry: $(dockerRegistryServiceConnection)
+    - task: Docker@2
+      displayName: 'Wicket - Build and push an image'
+      inputs:       
+        containerRegistry: $(dockerRegistryServiceConnection)
+        Dockerfile: $(dockerfilePathWicket)
+        repository: $(imageRepositoryWicket)
+        command: buildAndPush
+        tags: $(tag)       
+        arguments: '--build-arg JAR_FILE=$(Build.SourcesDirectory)/wicket/target/wicket.jar .'
+        
+- stage: BuildsChaos
+  displayName: 'Chaos - Build and push'
+  jobs:
+  - job: Build
+    displayName: 'Build Chaos'
+    pool:
+     vmImage: $(vmImageName)
+    container: maven:3.9.5-eclipse-temurin-21
+    variables:
+      - name: JAVA_HOME
+        value: /opt/java/openjdk
+        #value: /usr/lib64/graalvm/graalvm-community-java21
+      - name: JAVA_VERSION
+        value: jdk-21.0.1+12
+        #value: openjdk 21.0.1 2023-10-17
+    steps:
+    - task: DockerInstaller@0
+      displayName: Docker Installer
+      inputs:
+       dockerVersion: 24.0.2
+       releaseType: stable
+
+    - task: Maven@3
+      displayName: 'maven run Chaos'
+      inputs:
+        mavenPomFile: $(mavenPathChaos)        
+        goals: 'clean package -Pprod'
+    - task: Docker@2
+      displayName: Login to Container Registry
+      inputs:
+         command: login
+         containerRegistry: $(dockerRegistryServiceConnection)
+    - task: Docker@2
+      displayName: 'Chaos - Build and push an image'
+      inputs:       
+        containerRegistry: $(dockerRegistryServiceConnection)
+        Dockerfile: $(dockerfilePathChaos)
+        repository: $(imageRepositoryChaos)
+        command: buildAndPush
+        tags: $(tag)       
+        arguments: '--build-arg JAR_FILE=$(Build.SourcesDirectory)/chaos/target/chaos.jar .'
+     
+        
+- stage: BuildsDocument
+  displayName: 'Document - Build and push'
+  jobs:
+  - job: Build
+    displayName: 'Build Document'
+    pool:
+     vmImage: $(vmImageName)
+    container: maven:3.9-eclipse-temurin-21
+    variables:
+      - name: JAVA_HOME
+        value: /opt/java/openjdk     
+      - name: JAVA_VERSION
+        value: jdk-21.0.1+12     
+    steps:
+    - task: DockerInstaller@0
+      displayName: Docker Installer
+      inputs:
+       dockerVersion: 24.0.2
+       releaseType: stable
+    - task: Maven@3
+      displayName: 'maven run Document'
+      inputs:
+        mavenPomFile: $(mavenPathDocument)        
+        goals: 'clean package -Pprod'
+    - task: Docker@2
+      displayName: Login to Container Registry
+      inputs:
+         command: login
+         containerRegistry: $(dockerRegistryServiceConnection)
+    - task: Docker@2
+      displayName: 'Document - Build and push an image'
+      inputs:       
+        containerRegistry: $(dockerRegistryServiceConnection)
+        Dockerfile: $(dockerfilePathDocument)
+        repository: $(imageRepositoryDocument)
+        command: buildAndPush
+        tags: $(tag)       
+        arguments: '--build-arg JAR_FILE=$(Build.SourcesDirectory)/document/target/document.jar .'
+        
+- stage: BuildsDiamond
+  displayName: 'Diamond - Build and push'
+  jobs:
+  - job: Build
+    displayName: 'Build Diamond'
+    pool:
+     vmImage: $(vmImageName)
+    container: maven:3.9.5-eclipse-temurin-21
+   # container: tomee:8.0.16-plume
+    variables:
+      - name: JAVA_HOME
+        value: /opt/java/openjdk
+      - name: JAVA_VERSION
+        #value: jdk-17.0.9+9
+        value: jdk-21.0.1+12
+    steps:
+    - task: DockerInstaller@0
+      displayName: Docker Installer
+      inputs:
+       dockerVersion: 24.0.2
+       releaseType: stable
+    - task: Maven@3
+      displayName: 'maven run Diamond'
+      inputs:
+        mavenPomFile: $(mavenPathDiamond)        
+        goals: 'clean package -Pprod'
+    - task: Docker@2
+      displayName: Login to Container Registry
+      inputs:
+         command: login
+         containerRegistry: $(dockerRegistryServiceConnection)
+    - task: Docker@2
+      displayName: 'Diamond - Build and push an image'
+      inputs:       
+        containerRegistry: $(dockerRegistryServiceConnection)
+        Dockerfile: $(dockerfilePathDiamond)
+        repository: $(imageRepositoryDiamond)
+        command: buildAndPush
+        tags: $(tag)       
+        arguments: '--build-arg JAR_FILE=$(Build.SourcesDirectory)/diamond/target/diamond.war .'

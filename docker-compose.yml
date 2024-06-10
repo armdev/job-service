@@ -1,0 +1,20 @@
+services: 
+   
+  job-service:
+    image: job-service 
+    build: ./job-service
+    env_file: ./job-service/.env
+    container_name: job-service
+    ports:
+      - '9011:9011'  
+      - '9021:9021'  
+      - '9022:9022'
+    networks:
+      - banknet
+      
+      
+networks:
+  banknet:
+    driver: bridge
+    ipam:
+      driver: default

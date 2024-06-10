@@ -1,0 +1,98 @@
+management:
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  security:
+    enabled: false
+  server:
+    port: 9021
+  tracing:
+    sampling:
+      probability: 1.0
+  endpoint:
+    health:
+      enabled: true
+      show-details: ALWAYS
+    probes:
+      enabled: true
+  endpoints:
+    jmx:
+      exposure:
+       include: '*'
+    web:
+     exposure:
+      include: '*'
+    cors:
+      allowed-origins: 'true'
+      enabled-by-default: 'false'
+      
+server:
+  tomcat:
+    accept-count: 5000
+    connection-timeout: 5000
+    keep-alive-timeout: 5000   
+    max-connections: 3000
+    max-http-form-post-size: -1
+    threads:        
+      max: 2000
+      min-spare: 20  
+  shutdown: GRACEFUL
+  http2:
+     enabled: true
+  port: 9011
+  servlet:
+      session:
+        timeout: 20m
+  compression:
+      enabled: true
+      mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+      min-response-size: 1024   
+      
+spring:  
+  thread:
+    virtual:
+      enabled: true 
+  main:
+    allow-circular-references: false
+    lazy-initialization: false
+  application:
+    name: job-service
+  profiles:
+    active:
+      ${BANK_ENV}     
+     
+  cloud:
+    discovery:
+       service-id: job-service
+       enabled: true       
+ 
+  data:
+    mongodb:
+      database: ${MONGO_DATABASE}
+      username: ${MONGODB_USERNAME}
+      password: ${MONGODB_PASSWORD}
+      authentication-database: admin
+      auto-index-creation: true
+      uri: ${MONGO_URI}
+      primary:
+         database: ${MONGO_DATABASE}
+         uri: ${MONGO_URI}
+
+  jackson:
+    serialization:
+      write_dates_as_timestamps: false
+
+logging:
+    level:
+      root: INFO
+      io.ameria: INFO
+        
+org.jobrunr.dashboard.enabled: true
+org.jobrunr.dashboard.port: 9022
+org.jobrunr.background-job-server.enabled: true
+org.jobrunr.job-scheduler.enabled: true
+org.jobrunr.background-job-server.poll-interval-in-seconds: 5
+org.jobrunr.background-job-server.worker-count: 50
+org.jobrunr.background-job-server.delete-succeeded-jobs-after: 3m
