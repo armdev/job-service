@@ -73,16 +73,18 @@ public class RedisConfiguration {
     }
 
     private RedisClient getRedisClient() {
+        
+        return RedisClient.create(RedisURI.create("redis", 6379));
 
-        RedisURI redisURI = RedisURI.Builder.redis("redis-primary", 6379)
-                .withAuthentication(username, password)
-                .build();
-        return RedisClient.create(redisURI);
+//        RedisURI redisURI = RedisURI.Builder.redis("redis", 6379)
+//                .withAuthentication(username, password)
+//                .build();
+//        return RedisClient.create(redisURI);
 
-//
 //        if (profile.equalsIgnoreCase("LOCAL")) {
-//            return RedisClient.create(RedisURI.create("127.0.0.1", 6379));
+//            return RedisClient.create(RedisURI.create("redis", 6379));
 //        }
+        ///return null;
     }
 
 }
