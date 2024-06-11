@@ -1,21 +1,21 @@
 services:
   redis-primary:
-    image: docker.io/bitnami/redis:7.2
+    image: registry.gitlab.com/armdev/dockers/redis:7.2
     container_name: redis-primary
     ports:
       - '6379'
     environment:
       - REDIS_REPLICATION_MODE=master
-      - REDIS_PASSWORD=mypass
+      - REDIS_PASSWORD=PkAX16o639vwj5u
       - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
     volumes:
-      - 'redis_data:/bitnami/redis/data'
+      - 'redis_data:/bitnami/redis/data'      
     networks:
-      - banknet
+      - banknet      
 
   redis-secondary:
-    image: docker.io/bitnami/redis:7.2
-    container_name: redis-secondary 
+    image: registry.gitlab.com/armdev/dockers/redis:7.2
+    container_name: redis-secondary
     ports:
       - '6379'
     depends_on:
@@ -24,24 +24,29 @@ services:
       - REDIS_REPLICATION_MODE=slave
       - REDIS_MASTER_HOST=redis-primary
       - REDIS_MASTER_PORT_NUMBER=6379
-      - REDIS_MASTER_PASSWORD=mypass
-      - REDIS_PASSWORD=mypass
-      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
-    networks:
-      - banknet      
-  
-  redisinsight:
-    image: redislabs/redisinsight:latest
-    container_name: redisinsight 
-    ports:
-      - '8001:8001'
+      - REDIS_MASTER_PASSWORD=PkAX16o639vwj5u
+      - REDIS_PASSWORD=PkAX16o639vwj5u
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL      
     networks:
       - banknet
+      
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: ghcr.io/joeferner/redis-commander:latest   
+    restart: always
+    environment:
+      - REDIS_HOSTS=redis-primary:6379
+    ports:
+      - "8082:8081"      
+    networks:
+      - banknet
+
 
 volumes:
   redis_data:
     driver: local
-    
+
 networks:
   banknet:
     driver: bridge

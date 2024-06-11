@@ -83,7 +83,6 @@ public class RedisConfiguration {
 //        if (profile.equalsIgnoreCase("LOCAL")) {
 //            return RedisClient.create(RedisURI.create("127.0.0.1", 6379));
 //        }
-     
     }
 
 }
