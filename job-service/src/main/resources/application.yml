@@ -78,7 +78,12 @@ spring:
       uri: ${MONGO_URI}
       primary:
          database: ${MONGO_DATABASE}
-         uri: ${MONGO_URI}
+         uri: ${MONGO_URI}         
+    redis:    
+       host: ${REDIS_HOST}
+       port: 6379
+       password: ${REDIS_PASS}
+       username:  ${REDIS_USERNAME}
 
   jackson:
     serialization:
